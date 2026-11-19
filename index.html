@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="zh-CN"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>iLONG</title>
+<meta name="robots" content="noindex,nofollow">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,"Segoe UI","Microsoft YaHei",sans-serif;background:#f5f6f8;color:#1f2328;padding:32px 20px}
+.wrap{max-width:1080px;margin:0 auto}
+
+/* 顶部 */
+.hd{background:#fff;border-radius:14px;box-shadow:0 2px 16px rgba(0,0,0,.07);padding:32px 32px 26px;margin-bottom:18px;position:relative}
+.hd h1{font-size:25px;font-weight:500;padding-right:140px}
+.hd .desc{margin-top:10px;font-size:15px;color:#6b7280;line-height:1.7;padding-right:140px}
+.hd .clk{margin-top:18px;padding-top:16px;border-top:1px solid #f2f3f5;display:flex;gap:22px;flex-wrap:wrap;row-gap:8px;font-size:13px;color:#6b7280}
+.hd .clk span{white-space:nowrap}
+.hd .clk b{color:#374151;font-weight:600;font-family:Consolas,monospace}
+.dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:#0f9d58;margin-right:6px;vertical-align:1px}
+
+/* 语言切换 */
+.lang{position:absolute;top:26px;right:28px;display:flex;border:1px solid #e3e6ea;border-radius:8px;overflow:hidden;background:#fafbfc}
+.lang button{border:0;background:transparent;width:64px;padding:6px 0;text-align:center;font-size:12.5px;font-weight:600;color:#8b9199;cursor:pointer;font-family:inherit;letter-spacing:.3px;transition:all .15s}
+.lang button+button{border-left:1px solid #e3e6ea}
+.lang button:hover{color:#374151}
+.lang button.on{background:#1f2328;color:#fff}
+
+/* 分区标题 */
+.sect{margin:26px 0 13px;padding:0 4px;display:flex;align-items:baseline;gap:10px}
+.sect h2{font-size:15px;font-weight:700;color:#1f2328;letter-spacing:.3px}
+.sect .n{font-size:12px;color:#b0b5ba}
+
+/* 卡片网格 */
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.card{background:#fff;border-radius:12px;box-shadow:0 1px 8px rgba(0,0,0,.05);padding:20px 20px 18px;text-decoration:none;color:inherit;display:block;border:1px solid transparent;transition:box-shadow .18s,transform .18s,border-color .18s}
+.card:hover{box-shadow:0 5px 20px rgba(0,0,0,.1);transform:translateY(-2px);border-color:#e2e8f0}
+.card .ico{font-size:22px;line-height:1}
+.card .tt{margin-top:11px;font-size:15px;font-weight:700;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.card .ds{margin-top:6px;font-size:12.5px;color:#8b9199;line-height:1.65}
+.card .meta{margin-top:13px;padding-top:11px;border-top:1px solid #f4f5f7;font-size:11.5px;color:#a8adb3;font-family:Consolas,monospace}
+.card .meta i{font-style:normal;color:#9aa0a6}
+
+/* 标签 */
+.tag{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600;letter-spacing:.2px;font-family:inherit}
+.tag.live{background:#e9f7ef;color:#0f9d58}
+.tag.daily{background:#eef4ff;color:#2563eb}
+.tag.soon{background:#f2f3f5;color:#9aa0a6}
+
+/* 占位卡片 */
+.card.soon{box-shadow:none;border:1.5px dashed #e3e6ea;background:#fbfcfd;cursor:default}
+.card.soon:hover{transform:none;box-shadow:none;border-color:#d0d6dd}
+.card.soon .tt{color:#9aa0a6}
+.card.soon .ds{color:#b6bbc1}
+
+/* 页脚 */
+.ft{margin-top:34px;text-align:center;font-size:12px;color:#b0b5ba;padding-bottom:10px}
+
+@media(max-width:900px){.grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:620px){
+  body{padding:14px 10px}
+  .grid{grid-template-columns:1fr}
+  .hd{padding:22px 18px}
+  .hd h1{font-size:23px;padding-right:0}
+  .hd .desc{padding-right:0}
+  .lang{position:static;margin-top:16px;width:fit-content}
+}
+</style></head><body>
+<div class="wrap">
+
+  <div class="hd">
+    <div class="lang">
+      <button type="button" data-lang="en" class="on">EN</button>
+      <button type="button" data-lang="zh">中文</button>
+    </div>
+    <h1>iLONG</h1>
+    <div class="desc" data-zh="个人站点导航。" data-en="Personal site navigator.">个人站点导航。</div>
+    <div class="clk">
+      <span><i class="dot"></i><span data-zh="站点运行中" data-en="Online">站点运行中</span></span>
+      <span><span data-zh="北京" data-en="Beijing">北京</span> <b id="c-cn">—</b></span>
+      <span><span data-zh="纽约" data-en="New York">纽约</span> <b id="c-ny">—</b></span>
+      <span><span data-zh="伦敦" data-en="London">伦敦</span> <b id="c-ldn">—</b></span>
+      <span><span data-zh="迪拜" data-en="Dubai">迪拜</span> <b id="c-dxb">—</b></span>
+    </div>
+  </div>
+
+  <div class="sect"><h2 data-zh="数据" data-en="Data">数据</h2><span class="n" data-zh="自动更新" data-en="Auto-updated">自动更新</span></div>
+  <div class="grid">
+
+    <a class="card" href="https://finance.ilong.dpdns.org">
+      <div class="ico">📈</div>
+      <div class="tt"><span data-zh="金融市场行情" data-en="Market Quotes">金融市场行情</span><span class="tag daily" data-zh="每日" data-en="Daily">每日</span></div>
+      <div class="ds" data-zh="贵金属、能源、基本金属、股指期货、外汇，15 个品种实时报价与涨跌。" data-en="Live quotes and changes for precious metals, energy, base metals, index futures and FX — 15 instruments.">贵金属、能源、基本金属、股指期货、外汇，15 个品种实时报价与涨跌。</div>
+      <div class="meta"><i data-zh="更新" data-en="Updated">更新</i> <span data-zh="北京 07:00" data-en="07:00 CST">北京 07:00</span></div>
+    </a>
+
+    <a class="card" href="https://index.ilong.dpdns.org/futures.html">
+      <div class="ico">📚</div>
+      <div class="tt"><span data-zh="股指期货知识手册" data-en="Index Futures Guide">股指期货知识手册</span><span class="tag live" data-zh="已上线" data-en="Live">已上线</span></div>
+      <div class="ds" data-zh="IF / IC / IH / IM 品种机制与术语体系，合约规格、保证金制度、基差原理与风险机制。" data-en="Contract specs, margin rules, basis theory and risk mechanics for IF / IC / IH / IM index futures.">IF / IC / IH / IM 品种机制与术语体系，合约规格、保证金制度、基差原理与风险机制。</div>
+      <div class="meta"><i>index.ilong.dpdns.org/futures.html</i></div>
+    </a>
+
+    <div class="card soon">
+      <div class="ico">💱</div>
+      <div class="tt"><span data-zh="汇率看板" data-en="FX Board">汇率看板</span><span class="tag soon" data-zh="规划中" data-en="Planned">规划中</span></div>
+      <div class="ds" data-zh="在岸、离岸人民币与主要货币中间价、涨跌及走势。" data-en="Onshore and offshore CNY, major pairs, central parity and trends.">在岸、离岸人民币与主要货币中间价、涨跌及走势。</div>
+    </div>
+
+  </div>
+
+  <div class="sect"><h2 data-zh="工具" data-en="Tools">工具</h2><span class="n" data-zh="纯前端" data-en="Client-side">纯前端</span></div>
+  <div class="grid">
+
+    <div class="card soon">
+      <div class="ico">🧰</div>
+      <div class="tt"><span data-zh="小工具集" data-en="Utilities">小工具集</span><span class="tag soon" data-zh="规划中" data-en="Planned">规划中</span></div>
+      <div class="ds" data-zh="JSON 格式化、Base64、时间戳转换、URL 编解码、二维码等。" data-en="JSON formatter, Base64, timestamp converter, URL codec, QR codes and more.">JSON 格式化、Base64、时间戳转换、URL 编解码、二维码等。</div>
+    </div>
+
+    <div class="card soon">
+      <div class="ico">🧮</div>
+      <div class="tt"><span data-zh="计算器" data-en="Calculators">计算器</span><span class="tag soon" data-zh="规划中" data-en="Planned">规划中</span></div>
+      <div class="ds" data-zh="单位换算、汇率换算、日期计算。" data-en="Unit conversion, currency conversion and date math.">单位换算、汇率换算、日期计算。</div>
+    </div>
+
+    <div class="card soon">
+      <div class="ico">📊</div>
+      <div class="tt"><span data-zh="数据看板" data-en="Dashboards">数据看板</span><span class="tag soon" data-zh="规划中" data-en="Planned">规划中</span></div>
+      <div class="ds" data-zh="自定义监控指标与曲线。" data-en="Custom monitored metrics and charts.">自定义监控指标与曲线。</div>
+    </div>
+
+  </div>
+
+  <div class="sect"><h2 data-zh="内容" data-en="Content">内容</h2></div>
+  <div class="grid">
+
+    <div class="card soon">
+      <div class="ico">📝</div>
+      <div class="tt"><span data-zh="笔记" data-en="Notes">笔记</span><span class="tag soon" data-zh="规划中" data-en="Planned">规划中</span></div>
+      <div class="ds" data-zh="技术笔记与随手记录。" data-en="Technical notes and jottings.">技术笔记与随手记录。</div>
+    </div>
+
+    <div class="card soon">
+      <div class="ico">🗂️</div>
+      <div class="tt"><span data-zh="归档" data-en="Archive">归档</span><span class="tag soon" data-zh="规划中" data-en="Planned">规划中</span></div>
+      <div class="ds" data-zh="历史数据快照与版本记录。" data-en="Historical snapshots and version records.">历史数据快照与版本记录。</div>
+    </div>
+
+    <div class="card soon">
+      <div class="ico">ℹ️</div>
+      <div class="tt"><span data-zh="关于" data-en="About">关于</span><span class="tag soon" data-zh="规划中" data-en="Planned">规划中</span></div>
+      <div class="ds" data-zh="站点说明与更新日志。" data-en="Site notes and changelog.">站点说明与更新日志。</div>
+    </div>
+
+  </div>
+
+  <div class="ft">www.ilong.dpdns.org</div>
+
+</div>
+<script>
+(function(){
+  var TZ=[["c-cn","Asia/Shanghai"],["c-ny","America/New_York"],["c-ldn","Europe/London"],["c-dxb","Asia/Dubai"]];
+  var LOC={zh:"zh-CN",en:"en-US"};
+  var lang="zh";
+
+  function tick(){
+    TZ.forEach(function(z){
+      var el=document.getElementById(z[0]);
+      if(!el)return;
+      try{
+        el.textContent=new Intl.DateTimeFormat(LOC[lang],{timeZone:z[1],hour:"2-digit",minute:"2-digit",hour12:false}).format(new Date());
+      }catch(e){el.textContent="--:--"}
+    });
+  }
+
+  function apply(l){
+    lang=l;
+    document.documentElement.lang=(l==="zh"?"zh-CN":"en");
+    var nodes=document.querySelectorAll("[data-zh]");
+    for(var i=0;i<nodes.length;i++){
+      var v=nodes[i].getAttribute("data-"+l);
+      if(v!==null)nodes[i].textContent=v;
+    }
+    var btns=document.querySelectorAll(".lang button");
+    for(var j=0;j<btns.length;j++){
+      btns[j].classList.toggle("on",btns[j].getAttribute("data-lang")===l);
+    }
+    try{localStorage.setItem("portal-lang",l)}catch(e){}
+    tick();
+  }
+
+  var saved="en";
+  try{saved=localStorage.getItem("portal-lang")||"en"}catch(e){}
+  apply(saved);
+
+  var btns=document.querySelectorAll(".lang button");
+  for(var k=0;k<btns.length;k++){
+    btns[k].addEventListener("click",function(){apply(this.getAttribute("data-lang"))});
+  }
+
+  setInterval(tick,10000);
+})();
+</script>
+</body></html>
