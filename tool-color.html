@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="zh-CN"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Color Converter · iLONG</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%3E%3Ctext%20y%3D%22.9em%22%20font-size%3D%2290%22%3E%F0%9F%8D%89%3C%2Ftext%3E%3C%2Fsvg%3E">
+<meta name="robots" content="noindex,nofollow">
+<link rel="stylesheet" href="tools.css">
+</head><body>
+<div class="wrap">
+
+  <div class="hd">
+    <div class="lang">
+      <button type="button" data-lang="en" class="on">EN</button>
+      <button type="button" data-lang="zh">中文</button>
+    </div>
+    <a class="back" href="index.html">← <span data-zh="返回首页" data-en="Back to home">返回首页</span></a>
+    <h1 data-zh="颜色取色与转换" data-en="Color Picker &amp; Converter">颜色取色与转换</h1>
+    <div class="desc" data-zh="输入任意色值，实时预览并互转 HEX、RGB、HSL。点击色样可直接取色，一键复制。" data-en="Enter any color value to preview and convert between HEX, RGB and HSL. Pick visually, copy with one click.">输入任意色值，实时预览并互转 HEX、RGB、HSL。点击色样可直接取色，一键复制。</div>
+  </div>
+
+  <div class="panel">
+    <h3 data-zh="拾色" data-en="Pick a color">拾色</h3>
+    <div style="display:flex;gap:14px;align-items:center">
+      <input type="color" id="picker" value="#1f2328">
+      <input type="text" id="manual" value="#1f2328" style="max-width:200px;font-family:Consolas,monospace" spellcheck="false">
+      <span class="hint" style="margin:0" data-zh="支持 #hex、rgb()、hsl()" data-en="Accepts #hex, rgb(), hsl()">支持 #hex、rgb()、hsl()</span>
+    </div>
+
+    <h3 style="margin-top:20px" data-zh="预览" data-en="Preview">预览</h3>
+    <div class="swatch" id="sw"></div>
+
+    <h3 style="margin-top:20px" data-zh="色值" data-en="Values">色值</h3>
+    <div class="colrow"><span>HEX</span><b id="vhex">#1F2328</b><button data-copy="vhex" data-zh="复制" data-en="Copy">复制</button></div>
+    <div class="colrow"><span>RGB</span><b id="vrgb">rgb(31, 35, 40)</b><button data-copy="vrgb" data-zh="复制" data-en="Copy">复制</button></div>
+    <div class="colrow"><span>HSL</span><b id="vhsl">hsl(214, 13%, 14%)</b><button data-copy="vhsl" data-zh="复制" data-en="Copy">复制</button></div>
+    <div class="colrow"><span data-zh="亮度对比（白字）" data-en="Contrast (white text)">亮度对比（白字）</span><b id="vwhite">—</b><button data-copy="vwhite" data-zh="复制" data-en="Copy">复制</button></div>
+    <div class="colrow"><span data-zh="亮度对比（黑字）" data-en="Contrast (black text)">亮度对比（黑字）</span><b id="vblack">—</b><button data-copy="vblack" data-zh="复制" data-en="Copy">复制</button></div>
+    <div class="hint" id="msg"></div>
+  </div>
+
+  <div class="ft"><a href="index.html">www.ilong.dpdns.org</a></div>
+</div>
+
+<script src="tools.js"></script>
+<script>
+(function(){
+  var $ = function(id){ return document.getElementById(id); };
+  var T = window.IlongTools;
+
+  function clamp(v, lo, hi){ return Math.max(lo, Math.min(hi, v)); }
+
+  function hexToRgb(hex){
+    var h = hex.trim().replace(/^#/, "");
+    if (h.length === 3) h = h[0]+h[0]+h[1]+h[1]+h[2]+h[2];
+    if (!/^[0-9a-fA-F]{6}$/.test(h)) return null;
+    return { r: parseInt(h.slice(0,2),16), g: parseInt(h.slice(2,4),16), b: parseInt(h.slice(4,6),16) };
+  }
+
+  function parseAny(s){
+    s = s.trim();
+    // #hex
+    if (s[0] === "#") return hexToRgb(s);
+    // rgb(r,g,b)
+    var m = s.match(/^rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/i);
+    if (m) return { r: clamp(+m[1],0,255), g: clamp(+m[2],0,255), b: clamp(+m[3],0,255) };
+    // hsl(h,s%,l%)
+    m = s.match(/^hsla?\(\s*([\d.]+)\s*,\s*([\d.]+)%\s*,\s*([\d.]+)%/i);
+    if (m) return hslToRgb(+m[1], +m[2], +m[3]);
+    // 纯 6 位 hex 不带 #
+    if (/^[0-9a-fA-F]{6}$/.test(s)) return hexToRgb(s);
+    if (/^[0-9a-fA-F]{3}$/.test(s)) return hexToRgb(s);
+    return null;
+  }
+
+  function rgbToHsl(r, g, b){
+    r /= 255; g /= 255; b /= 255;
+    var max = Math.max(r,g,b), min = Math.min(r,g,b);
+    var h, s, l = (max + min) / 2;
+    if (max === min){ h = 0; s = 0; }
+    else {
+      var d = max - min;
+      s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+      switch (max){
+        case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+        case g: h = (b - r) / d + 2; break;
+        default: h = (r - g) / d + 4;
+      }
+      h /= 6;
+    }
+    return { h: Math.round(h * 360), s: Math.round(s * 100), l: Math.round(l * 100) };
+  }
+
+  function hslToRgb(h, s, l){
+    h = ((h % 360) + 360) % 360 / 360; s /= 100; l /= 100;
+    function hue2rgb(p, q, t){
+      if (t < 0) t += 1; if (t > 1) t -= 1;
+      if (t < 1/6) return p + (q - p) * 6 * t;
+      if (t < 1/2) return q;
+      if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+      return p;
+    }
+    var r, g, b;
+    if (s === 0){ r = g = b = l; }
+    else {
+      var q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+      var p = 2 * l - q;
+      r = hue2rgb(p, q, h + 1/3); g = hue2rgb(p, q, h); b = hue2rgb(p, q, h - 1/3);
+    }
+    return { r: Math.round(r*255), g: Math.round(g*255), b: Math.round(b*255) };
+  }
+
+  function toHex(r, g, b){
+    function p(n){ var s = n.toString(16).toUpperCase(); return s.length === 1 ? "0"+s : s; }
+    return "#" + p(r) + p(g) + p(b);
+  }
+
+  // 相对亮度 → 对比度
+  function luminance(r, g, b){
+    function f(c){
+      c /= 255;
+      return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+    }
+    return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b);
+  }
+  function contrast(l1, l2){
+    var a = Math.max(l1, l2), b = Math.min(l1, l2);
+    return (a + 0.05) / (b + 0.05);
+  }
+
+  function render(rgb, syncInputs){
+    var hex = toHex(rgb.r, rgb.g, rgb.b);
+    var hsl = rgbToHsl(rgb.r, rgb.g, rgb.b);
+    var lum = luminance(rgb.r, rgb.g, rgb.b);
+    var cw = contrast(lum, 1);
+    var cb = contrast(lum, 0);
+
+    $("sw").style.background = hex;
+    $("vhex").textContent = hex;
+    $("vrgb").textContent = "rgb(" + rgb.r + ", " + rgb.g + ", " + rgb.b + ")";
+    $("vhsl").textContent = "hsl(" + hsl.h + ", " + hsl.s + "%, " + hsl.l + "%)";
+    $("vwhite").textContent = cw.toFixed(2) + " : 1" + (cw >= 4.5 ? (T.lang()==="zh"?" ✓ AA":" ✓ AA") : "");
+    $("vblack").textContent = cb.toFixed(2) + " : 1" + (cb >= 4.5 ? (T.lang()==="zh"?" ✓ AA":" ✓ AA") : "");
+
+    if (syncInputs){
+      $("picker").value = hex;
+      $("manual").value = hex;
+    }
+  }
+
+  function fromManual(){
+    var v = $("manual").value;
+    var rgb = parseAny(v);
+    if (!rgb){
+      $("msg").innerHTML = '<span class="err">' + (T.lang()==="zh"?"无法识别该色值":"Unrecognized color value") + '</span>';
+      return;
+    }
+    $("msg").textContent = "";
+    render(rgb, true);
+  }
+
+  $("picker").addEventListener("input", function(){ render(hexToRgb(this.value), true); });
+  $("manual").addEventListener("input", fromManual);
+  $("manual").addEventListener("keydown", function(e){ if (e.key === "Enter") fromManual(); });
+
+  document.addEventListener("click", function(e){
+    var b = e.target.closest ? e.target.closest("[data-copy]") : null;
+    if (!b) return;
+    var id = b.getAttribute("data-copy");
+    var val = $(id).textContent;
+    if (val === "—") return;
+    T.copy(val, b);
+  });
+
+  window.onLangChange = function(){
+    var rgb = parseAny($("manual").value);
+    if (rgb) render(rgb, false);
+  };
+
+  render(hexToRgb("#1f2328"), true);
+})();
+</script>
+</body></html>

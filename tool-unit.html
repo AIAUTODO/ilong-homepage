@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="zh-CN"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Convert · iLONG</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%3E%3Ctext%20y%3D%22.9em%22%20font-size%3D%2290%22%3E%F0%9F%8D%89%3C%2Ftext%3E%3C%2Fsvg%3E">
+<meta name="robots" content="noindex,nofollow">
+<link rel="stylesheet" href="tools.css">
+<style>
+/* 页签 */
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px}
+.tabs button{border:1px solid #e3e6ea;background:#fff;border-radius:8px;padding:7px 14px;font-size:12.5px;font-weight:600;color:#6b7280;cursor:pointer;font-family:inherit;transition:all .15s;letter-spacing:.2px}
+.tabs button:hover{background:#f7f8fa;color:#374151}
+.tabs button.on{background:#1f2328;color:#fff;border-color:#1f2328}
+
+/* 换算双栏 */
+.conv{display:grid;grid-template-columns:1fr 34px 1fr;gap:12px;align-items:start}
+.conv .side{display:flex;flex-direction:column;gap:8px}
+.conv .side label{font-size:11.5px;color:#9aa0a6;font-weight:600;letter-spacing:.3px}
+.conv .swap{display:flex;align-items:center;justify-content:center;height:42px;color:#b0b5ba;font-size:16px;user-select:none}
+.conv input,.conv select{font-family:Consolas,monospace}
+.conv input{font-size:17px;font-weight:600;padding:10px 13px}
+.conv select{font-size:13px;padding:9px 11px}
+@media(max-width:640px){
+  .conv{grid-template-columns:1fr;gap:8px}
+  .conv .swap{height:26px;transform:rotate(90deg)}
+}
+
+/* 结果条 */
+.res{background:#fafbfc;border:1px solid #eef0f3;border-radius:10px;padding:14px 16px;margin-top:16px}
+.res .big{font-family:Consolas,monospace;font-size:24px;font-weight:700;color:#1f2328;line-height:1.3;word-break:break-all}
+.res .sub{font-size:12px;color:#9aa0a6;margin-top:5px;word-break:break-all}
+
+/* 全部单位一览 */
+.allgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:12px}
+.allrow{display:flex;justify-content:space-between;align-items:center;gap:10px;background:#fafbfc;border:1px solid #eef0f3;border-radius:9px;padding:10px 13px;cursor:pointer;transition:border-color .15s,background .15s}
+.allrow:hover{border-color:#d8dee6;background:#f6f8fa}
+.allrow .u{font-size:12.5px;color:#6b7280;white-space:nowrap}
+.allrow .n{font-family:Consolas,monospace;font-size:13.5px;font-weight:600;color:#1f2328;text-align:right;word-break:break-all}
+@media(max-width:720px){.allgrid{grid-template-columns:1fr}}
+
+/* BMI */
+.bmiform{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:640px){.bmiform{grid-template-columns:1fr}}
+.bmiform .f label{display:block;font-size:11.5px;color:#9aa0a6;font-weight:600;margin-bottom:7px;letter-spacing:.3px}
+.bmiform .f .inline{display:flex;gap:8px}
+.bmiform .f .inline input{flex:1}
+.bmiform .f .inline select{width:88px;flex:none}
+.bmibox{text-align:center;padding:22px 0 6px}
+.bmibox .val{font-family:Consolas,monospace;font-size:46px;font-weight:700;line-height:1;color:#1f2328}
+.bmibox .lv{display:inline-block;margin-top:12px;padding:5px 15px;border-radius:20px;font-size:12.5px;font-weight:700;letter-spacing:.3px}
+.bmibox .st{font-size:12.5px;color:#9aa0a6;margin-top:10px}
+.bmiscale{margin-top:22px}
+.bmiscale .track{display:flex;height:10px;border-radius:6px;overflow:hidden}
+.bmiscale .track i{display:block}
+.bmiscale .marks{display:flex;margin-top:7px;font-size:10.5px;color:#b0b5ba;font-family:Consolas,monospace}
+.bmiscale .marks span{text-align:left;padding-left:0;transform:translateX(-50%)}
+.bmiscale .ptr{position:relative;height:0}
+.bmiscale .ptr b{position:absolute;top:-24px;transform:translateX(-50%);font-size:11px;background:#1f2328;color:#fff;padding:2px 7px;border-radius:5px;white-space:nowrap;font-weight:600}
+.bmiscale .ptr b::after{content:"";position:absolute;left:50%;bottom:-4px;transform:translateX(-50%);border:4px solid transparent;border-top-color:#1f2328}
+.bmiscale .ranges{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:14px}
+.bmiscale .ranges div{background:#fafbfc;border:1px solid #eef0f3;border-radius:8px;padding:9px 8px;text-align:center}
+.bmiscale .ranges .k{font-size:11px;color:#9aa0a6}
+.bmiscale .ranges .v{font-family:Consolas,monospace;font-size:12.5px;font-weight:600;color:#1f2328;margin-top:3px}
+@media(max-width:640px){.bmiscale .ranges{grid-template-columns:repeat(2,1fr)}}
+
+.hide{display:none!important}
+</style>
+</head><body>
+<div class="wrap">
+
+  <div class="hd">
+    <div class="lang">
+      <button type="button" data-lang="en" class="on">EN</button>
+      <button type="button" data-lang="zh">中文</button>
+    </div>
+    <a class="back" href="index.html">← <span data-zh="返回首页" data-en="Back to home">返回首页</span></a>
+    <h1 data-zh="换算" data-en="Convert">换算</h1>
+    <div class="desc" data-zh="长度、重量、温度、面积、体积、身高、数据、BMI。输入即算，全部在浏览器本地完成。" data-en="Length, weight, temperature, area, volume, height, data and BMI. Instant results, all computed locally in your browser.">长度、重量、温度、面积、体积、身高、数据、BMI。输入即算，全部在浏览器本地完成。</div>
+  </div>
+
+  <div class="panel">
+    <div class="tabs" id="tabs">
+      <button type="button" data-tab="len" class="on" data-zh="长度" data-en="Length">长度</button>
+      <button type="button" data-tab="wt" data-zh="重量" data-en="Weight">重量</button>
+      <button type="button" data-tab="temp" data-zh="温度" data-en="Temperature">温度</button>
+      <button type="button" data-tab="area" data-zh="面积" data-en="Area">面积</button>
+      <button type="button" data-tab="vol" data-zh="体积" data-en="Volume">体积</button>
+      <button type="button" data-tab="hgt" data-zh="身高" data-en="Height">身高</button>
+      <button type="button" data-tab="data" data-zh="数据" data-en="Data">数据</button>
+      <button type="button" data-tab="bmi" data-zh="BMI" data-en="BMI">BMI</button>
+    </div>
+
+    <!-- 通用换算面板 -->
+    <div id="pane-conv">
+      <div class="conv">
+        <div class="side">
+          <label data-zh="从" data-en="From">从</label>
+          <input type="text" id="fromVal" inputmode="decimal" value="1" spellcheck="false">
+          <select id="fromUnit"></select>
+        </div>
+        <div class="swap">⇄</div>
+        <div class="side">
+          <label data-zh="到" data-en="To">到</label>
+          <input type="text" id="toVal" inputmode="decimal" value="" spellcheck="false">
+          <select id="toUnit"></select>
+        </div>
+      </div>
+
+      <div class="res">
+        <div class="big" id="resBig">—</div>
+        <div class="sub" id="resSub"></div>
+      </div>
+
+      <h3 style="margin-top:22px" data-zh="全部单位" data-en="All units">全部单位</h3>
+      <div class="allgrid" id="allList"></div>
+      <div class="hint" id="msg"></div>
+    </div>
+
+    <!-- 身高面板 -->
+    <div id="pane-hgt" class="hide">
+      <div class="conv">
+        <div class="side">
+          <label data-zh="厘米 / 米" data-en="Centimetres / Metres">厘米 / 米</label>
+          <div style="display:flex;gap:8px">
+            <input type="text" id="hCm" inputmode="decimal" value="175" spellcheck="false" style="flex:1">
+            <select id="hUnit" style="width:80px;flex:none">
+              <option value="cm">cm</option>
+              <option value="m">m</option>
+            </select>
+          </div>
+          <label style="margin-top:6px" data-zh="英尺 + 英寸" data-en="Feet + inches">英尺 + 英寸</label>
+          <div style="display:flex;gap:8px">
+            <input type="text" id="hFt" inputmode="decimal" value="" spellcheck="false" style="flex:1">
+            <input type="text" id="hIn" inputmode="decimal" value="" spellcheck="false" style="flex:1">
+          </div>
+        </div>
+        <div class="swap">⇄</div>
+        <div class="side">
+          <label data-zh="其它写法" data-en="Other forms">其它写法</label>
+          <div class="res" style="margin-top:0">
+            <div class="big" id="hBig">—</div>
+            <div class="sub" id="hSub"></div>
+          </div>
+        </div>
+      </div>
+
+      <h3 style="margin-top:22px" data-zh="常用身高对照" data-en="Common heights">常用身高对照</h3>
+      <div class="allgrid" id="hTable"></div>
+      <div class="hint" id="hMsg"></div>
+    </div>
+
+    <!-- BMI 面板 -->
+    <div id="pane-bmi" class="hide">
+      <div class="bmiform">
+        <div class="f">
+          <label data-zh="身高" data-en="Height">身高</label>
+          <div class="inline" id="bHWrap">
+            <input type="text" id="bH" inputmode="decimal" value="175" spellcheck="false">
+            <select id="bHU">
+              <option value="cm">cm</option>
+              <option value="m">m</option>
+              <option value="ftin">ft / in</option>
+            </select>
+          </div>
+          <div class="inline hide" id="bFtWrap" style="margin-top:8px">
+            <input type="text" id="bFt" inputmode="decimal" placeholder="ft" spellcheck="false">
+            <input type="text" id="bIn" inputmode="decimal" placeholder="in" spellcheck="false">
+          </div>
+        </div>
+        <div class="f">
+          <label data-zh="体重" data-en="Weight">体重</label>
+          <div class="inline">
+            <input type="text" id="bW" inputmode="decimal" value="70" spellcheck="false">
+            <select id="bWU">
+              <option value="kg">kg</option>
+              <option value="jin">斤</option>
+              <option value="lb">lb</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="bmibox">
+        <div class="val" id="bVal">—</div>
+        <div><span class="lv" id="bLv" data-zh="等待输入" data-en="Waiting">等待输入</span></div>
+        <div class="st" id="bSt"></div>
+      </div>
+
+      <div class="bmiscale">
+        <div class="ptr"><b id="bPtr" style="left:0;display:none">0</b></div>
+        <div class="track">
+          <i style="width:28.33%;background:#7fb8ea"></i>
+          <i style="width:21.67%;background:#6ec98a"></i>
+          <i style="width:16.67%;background:#f0c255"></i>
+          <i style="width:33.33%;background:#e8836f"></i>
+        </div>
+        <div class="marks">
+          <span style="width:28.33%">18.5</span>
+          <span style="width:21.67%">25</span>
+          <span style="width:16.67%">30</span>
+          <span style="width:33.33%">40+</span>
+        </div>
+        <div class="ranges">
+          <div><div class="k" data-zh="偏瘦" data-en="Underweight">偏瘦</div><div class="v">&lt; 18.5</div></div>
+          <div><div class="k" data-zh="正常" data-en="Normal">正常</div><div class="v">18.5 – 24.9</div></div>
+          <div><div class="k" data-zh="超重" data-en="Overweight">超重</div><div class="v">25 – 29.9</div></div>
+          <div><div class="k" data-zh="肥胖" data-en="Obese">肥胖</div><div class="v">≥ 30</div></div>
+        </div>
+        <div class="hint" style="text-align:center;margin-top:12px" data-zh="按 WHO 成人标准。BMI 仅为粗略参考，不适用于孕妇、运动员与未成年人。" data-en="WHO adult standard. BMI is a rough reference only, not applicable to pregnant women, athletes or minors.">按 WHO 成人标准。BMI 仅为粗略参考，不适用于孕妇、运动员与未成年人。</div>
+      </div>
+      <div class="hint" id="bMsg"></div>
+    </div>
+  </div>
+
+  <div class="ft"><a href="index.html">www.ilong.dpdns.org</a></div>
+</div>
+
+<script src="tools.js"></script>
+<script>
+(function(){
+  var $ = function(id){ return document.getElementById(id); };
+  var T = window.IlongTools;
+
+  // ============ 单位定义 ============
+  // factor = 相对基准单位的系数（基准单位 factor 为 1）
+  var CATS = {
+    len: {
+      base: "m",
+      units: [
+        { k: "m",    f: 1,          zh: "米",   en: "Metre",        ab: "m" },
+        { k: "km",   f: 1000,       zh: "千米", en: "Kilometre",    ab: "km" },
+        { k: "cm",   f: 0.01,       zh: "厘米", en: "Centimetre",   ab: "cm" },
+        { k: "mm",   f: 0.001,      zh: "毫米", en: "Millimetre",   ab: "mm" },
+        { k: "um",   f: 0.000001,   zh: "微米", en: "Micrometre",   ab: "µm" },
+        { k: "in",   f: 0.0254,     zh: "英寸", en: "Inch",         ab: "in" },
+        { k: "ft",   f: 0.3048,     zh: "英尺", en: "Foot",         ab: "ft" },
+        { k: "yd",   f: 0.9144,     zh: "码",   en: "Yard",         ab: "yd" },
+        { k: "mi",   f: 1609.344,   zh: "英里", en: "Mile",         ab: "mi" },
+        { k: "nmi",  f: 1852,       zh: "海里", en: "Nautical mile",ab: "nmi" },
+        { k: "li",   f: 500,        zh: "里",   en: "Li",           ab: "里" },
+        { k: "zhang",f: 3.3333333,  zh: "丈",   en: "Zhang",        ab: "丈" },
+        { k: "chi",  f: 0.33333333, zh: "尺",   en: "Chi",          ab: "尺" },
+        { k: "cun",  f: 0.03333333, zh: "寸",   en: "Cun",          ab: "寸" }
+      ]
+    },
+    wt: {
+      base: "kg",
+      units: [
+        { k: "kg",  f: 1,            zh: "千克", en: "Kilogram",   ab: "kg" },
+        { k: "g",   f: 0.001,        zh: "克",   en: "Gram",       ab: "g" },
+        { k: "mg",  f: 0.000001,     zh: "毫克", en: "Milligram",  ab: "mg" },
+        { k: "t",   f: 1000,         zh: "吨",   en: "Tonne",      ab: "t" },
+        { k: "jin", f: 0.5,          zh: "斤",   en: "Jin",        ab: "斤" },
+        { k: "liang",f: 0.05,        zh: "两",   en: "Liang",      ab: "两" },
+        { k: "qian",f: 0.005,        zh: "钱",   en: "Qian",       ab: "钱" },
+        { k: "lb",  f: 0.45359237,   zh: "磅",   en: "Pound",      ab: "lb" },
+        { k: "oz",  f: 0.028349523,  zh: "盎司", en: "Ounce",      ab: "oz" },
+        { k: "st",  f: 6.35029318,   zh: "英石", en: "Stone",      ab: "st" },
+        { k: "ct",  f: 0.0002,       zh: "克拉", en: "Carat",      ab: "ct" }
+      ]
+    },
+    area: {
+      base: "m2",
+      units: [
+        { k: "m2",   f: 1,          zh: "平方米",   en: "Square metre",      ab: "m²" },
+        { k: "km2",  f: 1e6,        zh: "平方千米", en: "Square kilometre",  ab: "km²" },
+        { k: "cm2",  f: 0.0001,     zh: "平方厘米", en: "Square centimetre", ab: "cm²" },
+        { k: "ha",   f: 10000,      zh: "公顷",     en: "Hectare",           ab: "ha" },
+        { k: "mu",   f: 666.66667,  zh: "亩",       en: "Mu",                ab: "亩" },
+        { k: "ft2",  f: 0.09290304, zh: "平方英尺", en: "Square foot",       ab: "ft²" },
+        { k: "yd2",  f: 0.83612736, zh: "平方码",   en: "Square yard",       ab: "yd²" },
+        { k: "ac",   f: 4046.8564,  zh: "英亩",     en: "Acre",              ab: "ac" },
+        { k: "mi2",  f: 2589988.1,  zh: "平方英里", en: "Square mile",       ab: "mi²" },
+        { k: "qing", f: 66666.667,  zh: "顷",       en: "Qing",              ab: "顷" }
+      ]
+    },
+    vol: {
+      base: "L",
+      units: [
+        { k: "L",    f: 1,           zh: "升",         en: "Litre",         ab: "L" },
+        { k: "mL",   f: 0.001,       zh: "毫升",       en: "Millilitre",    ab: "mL" },
+        { k: "m3",   f: 1000,        zh: "立方米",     en: "Cubic metre",   ab: "m³" },
+        { k: "cm3",  f: 0.001,       zh: "立方厘米",   en: "Cubic cm",      ab: "cm³" },
+        { k: "gal",  f: 3.7854118,   zh: "加仑（美）", en: "Gallon (US)",   ab: "gal" },
+        { k: "galuk",f: 4.54609,     zh: "加仑（英）", en: "Gallon (UK)",   ab: "gal" },
+        { k: "qt",   f: 0.94635295,  zh: "夸脱（美）", en: "Quart (US)",    ab: "qt" },
+        { k: "pt",   f: 0.47317648,  zh: "品脱（美）", en: "Pint (US)",     ab: "pt" },
+        { k: "cup",  f: 0.23658824,  zh: "杯（美）",   en: "Cup (US)",      ab: "cup" },
+        { k: "foz",  f: 0.029573530, zh: "液量盎司",   en: "Fluid ounce",   ab: "fl oz" },
+        { k: "tbsp", f: 0.014786765, zh: "汤匙",       en: "Tablespoon",    ab: "tbsp" },
+        { k: "tsp",  f: 0.0049289216,zh: "茶匙",       en: "Teaspoon",      ab: "tsp" }
+      ]
+    },
+    data: {
+      base: "B",
+      units: [
+        { k: "B",    f: 1,            zh: "字节",   en: "Byte",    ab: "B" },
+        { k: "KB",   f: 1024,         zh: "KB (1024)", en: "KB (1024)", ab: "KB" },
+        { k: "MB",   f: 1048576,      zh: "MB (1024)", en: "MB (1024)", ab: "MB" },
+        { k: "GB",   f: 1073741824,   zh: "GB (1024)", en: "GB (1024)", ab: "GB" },
+        { k: "TB",   f: 1099511627776,zh: "TB (1024)", en: "TB (1024)", ab: "TB" },
+        { k: "kBd",  f: 1000,         zh: "kB (1000)", en: "kB (1000)", ab: "kB" },
+        { k: "MBd",  f: 1000000,      zh: "MB (1000)", en: "MB (1000)", ab: "MB" },
+        { k: "GBd",  f: 1000000000,   zh: "GB (1000)", en: "GB (1000)", ab: "GB" },
+        { k: "Kb",   f: 128,          zh: "Kbit",      en: "Kbit",      ab: "Kb" },
+        { k: "Mb",   f: 131072,       zh: "Mbit",      en: "Mbit",      ab: "Mb" },
+        { k: "Gb",   f: 134217728,    zh: "Gbit",      en: "Gbit",      ab: "Gb" }
+      ]
+    }
+  };
+
+  // 温度单独公式
+  var TEMP = [
+    { k: "c", zh: "摄氏度", en: "Celsius",    ab: "°C" },
+    { k: "f", zh: "华氏度", en: "Fahrenheit", ab: "°F" },
+    { k: "k", zh: "开尔文", en: "Kelvin",     ab: "K"  },
+    { k: "r", zh: "兰氏度", en: "Rankine",    ab: "°R" }
+  ];
+
+  function toC(v, k){
+    if (k === "c") return v;
+    if (k === "f") return (v - 32) * 5 / 9;
+    if (k === "k") return v - 273.15;
+    if (k === "r") return (v - 491.67) * 5 / 9;
+    return v;
+  }
+  function fromC(c, k){
+    if (k === "c") return c;
+    if (k === "f") return c * 9 / 5 + 32;
+    if (k === "k") return c + 273.15;
+    if (k === "r") return (c + 273.15) * 9 / 5;
+    return c;
+  }
+
+  // ============ 数值格式化 ============
+  function fmt(n){
+    if (!isFinite(n)) return "—";
+    if (n === 0) return "0";
+    var a = Math.abs(n);
+    if (a >= 1e15 || a < 1e-9) return n.toExponential(6).replace(/e([+-])(\d)$/, "e$10$2");
+    var d;
+    if (a >= 1000) d = 2;
+    else if (a >= 1) d = 4;
+    else if (a >= 0.001) d = 6;
+    else d = 10;
+    var s = n.toFixed(d);
+    if (s.indexOf(".") >= 0) s = s.replace(/0+$/, "").replace(/\.$/, "");
+    return s;
+  }
+
+  function parseNum(s){
+    if (typeof s !== "string") s = String(s);
+    s = s.trim().replace(/,/g, "").replace(/，/g, "");
+    if (s === "" || s === "-" || s === "." || s === "-.") return null;
+    // 支持 1/2 这样的分数
+    var fr = s.match(/^(-?\d+(?:\.\d+)?)\s*\/\s*(\d+(?:\.\d+)?)$/);
+    if (fr){
+      var den = parseFloat(fr[2]);
+      if (den === 0) return null;
+      return parseFloat(fr[1]) / den;
+    }
+    var v = parseFloat(s);
+    return isNaN(v) ? null : v;
+  }
+
+  function unitName(u, zh){ return zh ? u.zh : u.en; }
+
+  // ============ 通用换算 ============
+  var curCat = "len";
+
+  function catUnits(cat){
+    if (cat === "temp") return TEMP.map(function(t){ return { k: t.k, zh: t.zh, en: t.en, ab: t.ab }; });
+    return CATS[cat].units;
+  }
+
+  function convert(cat, v, from, to){
+    if (cat === "temp") return fromC(toC(v, from), to);
+    var us = CATS[cat].units;
+    var uf = null, ut = null;
+    for (var i = 0; i < us.length; i++){
+      if (us[i].k === from) uf = us[i];
+      if (us[i].k === to) ut = us[i];
+    }
+    if (!uf || !ut) return NaN;
+    return v * uf.f / ut.f;
+  }
+
+  function fillSelect(sel, units, keep){
+    var zh = T.lang() === "zh";
+    sel.innerHTML = "";
+    for (var i = 0; i < units.length; i++){
+      var o = document.createElement("option");
+      o.value = units[i].k;
+      var nm = unitName(units[i], zh);
+      o.textContent = nm + " (" + units[i].ab + ")";
+      sel.appendChild(o);
+    }
+    if (keep){
+      for (var j = 0; j < sel.options.length; j++){
+        if (sel.options[j].value === keep){ sel.selectedIndex = j; break; }
+      }
+    }
+  }
+
+  function defaultPair(cat){
+    var us = catUnits(cat);
+    var pref = {
+      len: ["m", "ft"], wt: ["kg", "jin"], temp: ["c", "f"],
+      area: ["m2", "mu"], vol: ["L", "gal"], data: ["MB", "Mb"]
+    }[cat] || [us[0].k, us[1] ? us[1].k : us[0].k];
+    // 确保单位存在
+    var has = function(k){ for (var i=0;i<us.length;i++) if (us[i].k===k) return true; return false; };
+    return [has(pref[0]) ? pref[0] : us[0].k, has(pref[1]) ? pref[1] : (us[1]?us[1].k:us[0].k)];
+  }
+
+  function renderCat(cat, fromU, toU){
+    curCat = cat;
+    var us = catUnits(cat);
+    var pair = defaultPair(cat);
+    var f = fromU || pair[0], t = toU || pair[1];
+    fillSelect($("fromUnit"), us, f);
+    fillSelect($("toUnit"), us, t);
+    $("msg").textContent = "";
+    recalc();
+  }
+
+  function recalc(){
+    var cat = curCat;
+    var fromU = $("fromUnit").value, toU = $("toUnit").value;
+    var raw = $("fromVal").value;
+    var v = parseNum(raw);
+    var zh = T.lang() === "zh";
+
+    if (v === null){
+      $("resBig").textContent = "—";
+      $("resSub").textContent = "";
+      renderAll(cat, null);
+      return;
+    }
+
+    var out = convert(cat, v, fromU, toU);
+    var us = catUnits(cat);
+    var uf = null, ut = null;
+    for (var i = 0; i < us.length; i++){
+      if (us[i].k === fromU) uf = us[i];
+      if (us[i].k === toU) ut = us[i];
+    }
+    $("resBig").textContent = fmt(out) + " " + (ut ? ut.ab : "");
+    $("resSub").textContent = fmt(v) + " " + (uf ? uf.ab : "") + " = " + fmt(out) + " " + (ut ? ut.ab : "");
+    renderAll(cat, v);
+  }
+
+  function renderAll(cat, baseVal){
+    var us = catUnits(cat);
+    var fromU = $("fromUnit").value;
+    var box = $("allList");
+    var zh = T.lang() === "zh";
+    box.innerHTML = "";
+    for (var i = 0; i < us.length; i++){
+      var u = us[i];
+      var val = baseVal === null ? "—" : fmt(convert(cat, baseVal, fromU, u.k));
+      var row = document.createElement("div");
+      row.className = "allrow";
+      row.innerHTML = '<span class="u">' + unitName(u, zh) + " (" + u.ab + ')</span><span class="n">' + val + "</span>";
+      (function(v, ab){
+        row.addEventListener("click", function(){
+          T.copy(String(v) + (v === "—" ? "" : ""), null);
+          row.querySelector(".n").style.color = "#0f9d58";
+          setTimeout(function(){ row.querySelector(".n").style.color = ""; }, 700);
+        });
+      })(val, u.ab);
+      box.appendChild(row);
+    }
+  }
+
+  // ============ 身高 ============
+  function hgtRecalc(src){
+    var cm;
+    if (src === "ft"){
+      var ft = parseNum($("hFt").value), inch = parseNum($("hIn").value);
+      if (ft === null && inch === null) return hgtClear();
+      cm = (ft || 0) * 30.48 + (inch || 0) * 2.54;
+    } else {
+      var v = parseNum($("hCm").value);
+      if (v === null) return hgtClear();
+      cm = $("hUnit").value === "m" ? v * 100 : v;
+    }
+    if (!isFinite(cm) || cm <= 0) return hgtClear();
+
+    var totalIn = cm / 2.54;
+    var ft2 = Math.floor(totalIn / 12);
+    var in2 = totalIn - ft2 * 12;
+    // 英寸保留一位，若到 12 则进位
+    if (Number(in2.toFixed(1)) >= 12){ ft2 += 1; in2 = 0; }
+
+    $("hBig").textContent = fmt(cm) + " cm";
+    $("hSub").textContent =
+      ft2 + " ft " + in2.toFixed(1) + " in  ·  " + fmt(cm / 100) + " m  ·  " + fmt(totalIn) + " in";
+
+    if (src !== "ft"){ $("hFt").value = String(ft2); $("hIn").value = in2.toFixed(1); }
+    if (src !== "cm"){ $("hCm").value = fmt(cm); }
+    hgtTable(cm);
+    $("hMsg").textContent = "";
+  }
+
+  function hgtClear(){
+    $("hBig").textContent = "—";
+    $("hSub").textContent = "";
+    hgtTable(null);
+  }
+
+  function hgtTable(curCm){
+    var list = [150, 155, 160, 165, 170, 175, 180, 185, 190, 195];
+    var zh = T.lang() === "zh";
+    var box = $("hTable");
+    box.innerHTML = "";
+    for (var i = 0; i < list.length; i++){
+      var cm = list[i];
+      var tIn = cm / 2.54;
+      var ft = Math.floor(tIn / 12);
+      var inch = tIn - ft * 12;
+      if (Number(inch.toFixed(1)) >= 12){ ft += 1; inch = 0; }
+      var row = document.createElement("div");
+      row.className = "allrow";
+      row.innerHTML = '<span class="u">' + cm + " cm</span><span class=\"n\">" + ft + "' " + inch.toFixed(1) + '"</span>';
+      if (curCm && Math.abs(curCm - cm) < 0.5) row.style.borderColor = "#1f2328";
+      box.appendChild(row);
+    }
+  }
+
+  // ============ BMI ============
+  function bmiRecalc(){
+    var hu = $("bHU").value;
+    var cm = null;
+    if (hu === "ftin"){
+      var ft = parseNum($("bFt").value), inch = parseNum($("bIn").value);
+      if (ft !== null || inch !== null) cm = (ft || 0) * 30.48 + (inch || 0) * 2.54;
+    } else {
+      var hv = parseNum($("bH").value);
+      if (hv !== null) cm = hu === "m" ? hv * 100 : hv;
+    }
+    var wv = parseNum($("bW").value);
+    var wu = $("bWU").value;
+    var kg = null;
+    if (wv !== null){
+      if (wu === "kg") kg = wv;
+      else if (wu === "jin") kg = wv * 0.5;
+      else if (wu === "lb") kg = wv * 0.45359237;
+    }
+
+    if (!cm || !kg || cm <= 0 || kg <= 0) return bmiClear();
+
+    var m = cm / 100;
+    var bmi = kg / (m * m);
+    $("bVal").textContent = bmi.toFixed(1);
+
+    var lv = $("bLv");
+    var color, bg, zh = T.lang() === "zh";
+    if (bmi < 18.5){ color = "#2563eb"; bg = "#eaf2fd"; lv.setAttribute("data-zh", "偏瘦"); lv.setAttribute("data-en", "Underweight"); }
+    else if (bmi < 25){ color = "#0f9d58"; bg = "#e9f7ef"; lv.setAttribute("data-zh", "正常"); lv.setAttribute("data-en", "Normal"); }
+    else if (bmi < 30){ color = "#b8860b"; bg = "#fdf6e3"; lv.setAttribute("data-zh", "超重"); lv.setAttribute("data-en", "Overweight"); }
+    else { color = "#c0392b"; bg = "#fdeeec"; lv.setAttribute("data-zh", "肥胖"); lv.setAttribute("data-en", "Obese"); }
+    lv.style.color = color;
+    lv.style.background = bg;
+    lv.textContent = zh ? lv.getAttribute("data-zh") : lv.getAttribute("data-en");
+
+    // 健康体重区间 18.5 ~ 24.9
+    var lo = 18.5 * m * m, hi = 24.9 * m * m;
+    var wUnit = zh ? "kg" : "kg";
+    var loJ = lo / 0.5, hiJ = hi / 0.5;
+    $("bSt").textContent = (zh ? "健康体重区间 " : "Healthy weight range ") +
+      lo.toFixed(1) + " – " + hi.toFixed(1) + " kg" +
+      (zh ? "（约 " + loJ.toFixed(0) + " – " + hiJ.toFixed(0) + " 斤）" : "");
+
+    // 指针位置：映射 10~40 到 0~100%，分段宽度按 18.5/25/30/40 实际比例
+    var p = Math.max(0, Math.min(100, (Math.min(bmi, 40) - 10) / 30 * 100));
+    var ptr = $("bPtr");
+    ptr.style.display = "block";
+    ptr.style.left = p + "%";
+    ptr.textContent = bmi.toFixed(1);
+    $("bMsg").textContent = "";
+  }
+
+  function bmiClear(){
+    $("bVal").textContent = "—";
+    var lv = $("bLv");
+    lv.style.color = ""; lv.style.background = "";
+    lv.setAttribute("data-zh", "等待输入"); lv.setAttribute("data-en", "Waiting");
+    lv.textContent = T.lang() === "zh" ? "等待输入" : "Waiting";
+    $("bSt").textContent = "";
+    $("bPtr").style.display = "none";
+  }
+
+  // ============ 页签切换 ============
+  var active = "len";
+  function showTab(name){
+    active = name;
+    var btns = $("tabs").querySelectorAll("button");
+    for (var i = 0; i < btns.length; i++) btns[i].classList.toggle("on", btns[i].getAttribute("data-tab") === name);
+    $("pane-conv").classList.toggle("hide", name === "hgt" || name === "bmi");
+    $("pane-hgt").classList.toggle("hide", name !== "hgt");
+    $("pane-bmi").classList.toggle("hide", name !== "bmi");
+
+    if (name === "hgt") hgtRecalc("cm");
+    else if (name === "bmi") bmiRecalc();
+    else renderCat(name);
+  }
+
+  // ============ 事件绑定 ============
+  $("tabs").addEventListener("click", function(e){
+    var b = e.target.closest ? e.target.closest("button[data-tab]") : null;
+    if (b) showTab(b.getAttribute("data-tab"));
+  });
+
+  $("fromVal").addEventListener("input", recalc);
+  $("fromUnit").addEventListener("change", recalc);
+  $("toUnit").addEventListener("change", recalc);
+
+  // 反向：改「到」的值，反推「从」
+  $("toVal").addEventListener("input", function(){
+    var v = parseNum(this.value);
+    if (v === null) return;
+    var back = convert(curCat, v, $("toUnit").value, $("fromUnit").value);
+    $("fromVal").value = fmt(back);
+    recalc();
+  });
+
+  $("hCm").addEventListener("input", function(){ hgtRecalc("cm"); });
+  $("hUnit").addEventListener("change", function(){ hgtRecalc("cm"); });
+  $("hFt").addEventListener("input", function(){ hgtRecalc("ft"); });
+  $("hIn").addEventListener("input", function(){ hgtRecalc("ft"); });
+
+  $("bH").addEventListener("input", bmiRecalc);
+  $("bHU").addEventListener("change", function(){
+    var isFt = this.value === "ftin";
+    $("bFtWrap").classList.toggle("hide", !isFt);
+    $("bHWrap").classList.toggle("hide", isFt);
+    if (isFt && !$("bFt").value){ $("bFt").value = "5"; $("bIn").value = "9"; }
+    bmiRecalc();
+  });
+  $("bFt").addEventListener("input", bmiRecalc);
+  $("bIn").addEventListener("input", bmiRecalc);
+  $("bW").addEventListener("input", bmiRecalc);
+  $("bWU").addEventListener("change", bmiRecalc);
+
+  // 语言切换后重建下拉与结果显示
+  window.onLangChange = function(){
+    if (active === "hgt"){ hgtRecalc("cm"); }
+    else if (active === "bmi"){ bmiRecalc(); }
+    else {
+      var f = $("fromUnit").value, t = $("toUnit").value;
+      var us = catUnits(active);
+      fillSelect($("fromUnit"), us, f);
+      fillSelect($("toUnit"), us, t);
+      recalc();
+    }
+  };
+
+  showTab("len");
+})();
+</script>
+</body></html>

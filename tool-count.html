@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="zh-CN"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Word Count · iLONG</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%3E%3Ctext%20y%3D%22.9em%22%20font-size%3D%2290%22%3E%F0%9F%8D%89%3C%2Ftext%3E%3C%2Fsvg%3E">
+<meta name="robots" content="noindex,nofollow">
+<link rel="stylesheet" href="tools.css">
+</head><body>
+<div class="wrap">
+
+  <div class="hd">
+    <div class="lang">
+      <button type="button" data-lang="en" class="on">EN</button>
+      <button type="button" data-lang="zh">中文</button>
+    </div>
+    <a class="back" href="index.html">← <span data-zh="返回首页" data-en="Back to home">返回首页</span></a>
+    <h1 data-zh="字数统计" data-en="Word &amp; Character Count">字数统计</h1>
+    <div class="desc" data-zh="粘贴或输入文字，实时统计字符、汉字、词数、行数与段落。中英文分别按各自规则计算。" data-en="Paste or type text for live counts of characters, CJK characters, words, lines and paragraphs. Chinese and English counted with their own rules.">粘贴或输入文字，实时统计字符、汉字、词数、行数与段落。中英文分别按各自规则计算。</div>
+  </div>
+
+  <div class="panel">
+    <h3 data-zh="文本" data-en="Text">文本</h3>
+    <textarea id="in" style="min-height:240px" spellcheck="false" data-ph-zh="在此粘贴或输入文本…" data-ph-en="Paste or type text here…"></textarea>
+
+    <div class="btns">
+      <button class="btn ghost" id="clr" data-zh="清空" data-en="Clear">清空</button>
+      <button class="btn ghost" id="cp" data-zh="复制文本" data-en="Copy text">复制文本</button>
+      <button class="btn ghost" id="dl" data-zh="下载 .txt" data-en="Download .txt">下载 .txt</button>
+    </div>
+
+    <h3 style="margin-top:20px" data-zh="统计" data-en="Counts">统计</h3>
+    <div class="stats">
+      <div class="stat"><div class="v" id="s-chars">0</div><div class="k" data-zh="字符（含空格）" data-en="Characters (with spaces)">字符（含空格）</div></div>
+      <div class="stat"><div class="v" id="s-nows">0</div><div class="k" data-zh="字符（不含空格）" data-en="Characters (no spaces)">字符（不含空格）</div></div>
+      <div class="stat"><div class="v" id="s-cjk">0</div><div class="k" data-zh="汉字" data-en="CJK characters">汉字</div></div>
+      <div class="stat"><div class="v" id="s-words">0</div><div class="k" data-zh="英文词数" data-en="English words">英文词数</div></div>
+      <div class="stat"><div class="v" id="s-lines">0</div><div class="k" data-zh="行数" data-en="Lines">行数</div></div>
+      <div class="stat"><div class="v" id="s-paras">0</div><div class="k" data-zh="段落" data-en="Paragraphs">段落</div></div>
+      <div class="stat"><div class="v" id="s-sent">0</div><div class="k" data-zh="句子" data-en="Sentences">句子</div></div>
+      <div class="stat"><div class="v" id="s-read">0</div><div class="k" data-zh="阅读时长（分钟）" data-en="Read time (min)">阅读时长（分钟）</div></div>
+    </div>
+    <div class="hint" id="msg"></div>
+  </div>
+
+  <div class="ft"><a href="index.html">www.ilong.dpdns.org</a></div>
+</div>
+
+<script src="tools.js"></script>
+<script>
+(function(){
+  var $ = function(id){ return document.getElementById(id); };
+  var T = window.IlongTools;
+
+  function count(text){
+    var chars = text.length;
+    var nows = text.replace(/\s/g, "").length;
+    // 汉字及 CJK 扩展、标点
+    var cjk = (text.match(/[\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff]/g) || []).length;
+    // 英文单词：连续字母数字
+    var words = (text.match(/[A-Za-z0-9]+(?:['’\-][A-Za-z0-9]+)*/g) || []).length;
+    var lines = text === "" ? 0 : text.split(/\r\n|\r|\n/).length;
+    var paras = text.trim() === "" ? 0 : text.trim().split(/\n\s*\n/).filter(function(p){ return p.trim(); }).length;
+    var sent = (text.match(/[.!?。！？；;]+/g) || []).length;
+    if (sent === 0 && text.trim()) sent = 1;
+
+    // 阅读时长：中文按 400 字/分钟，英文按 200 词/分钟
+    var minutes = cjk / 400 + words / 200;
+    var read = minutes < 1 && (cjk || words) ? "<1" : Math.round(minutes);
+
+    return { chars: chars, nows: nows, cjk: cjk, words: words, lines: lines, paras: paras, sent: sent, read: read };
+  }
+
+  function update(){
+    var t = $("in").value;
+    var c = count(t);
+    $("s-chars").textContent = c.chars;
+    $("s-nows").textContent = c.nows;
+    $("s-cjk").textContent = c.cjk;
+    $("s-words").textContent = c.words;
+    $("s-lines").textContent = c.lines;
+    $("s-paras").textContent = c.paras;
+    $("s-sent").textContent = c.sent;
+    $("s-read").textContent = c.read;
+  }
+
+  $("in").addEventListener("input", update);
+  $("clr").addEventListener("click", function(){ $("in").value = ""; update(); $("in").focus(); });
+  $("cp").addEventListener("click", function(){
+    var v = $("in").value;
+    if (!v){ $("msg").innerHTML = '<span class="err">' + (T.lang()==="zh"?"没有内容":"Nothing to copy") + '</span>'; return; }
+    T.copy(v, this);
+  });
+  $("dl").addEventListener("click", function(){
+    var v = $("in").value;
+    if (!v){ $("msg").innerHTML = '<span class="err">' + (T.lang()==="zh"?"没有内容":"Nothing to download") + '</span>'; return; }
+    T.download(v, "text.txt", "text/plain;charset=utf-8");
+  });
+
+  window.onLangChange = function(){ $("msg").textContent = ""; };
+  update();
+})();
+</script>
+</body></html>

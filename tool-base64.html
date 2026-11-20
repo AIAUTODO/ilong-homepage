@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="zh-CN"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Base64 · iLONG</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%3E%3Ctext%20y%3D%22.9em%22%20font-size%3D%2290%22%3E%F0%9F%8D%89%3C%2Ftext%3E%3C%2Fsvg%3E">
+<meta name="robots" content="noindex,nofollow">
+<link rel="stylesheet" href="tools.css">
+</head><body>
+<div class="wrap">
+
+  <div class="hd">
+    <div class="lang">
+      <button type="button" data-lang="en" class="on">EN</button>
+      <button type="button" data-lang="zh">中文</button>
+    </div>
+    <a class="back" href="index.html">← <span data-zh="返回首页" data-en="Back to home">返回首页</span></a>
+    <h1 data-zh="Base64 编解码" data-en="Base64 Encode / Decode">Base64 编解码</h1>
+    <div class="desc" data-zh="文本与 Base64 互转，正确处理中文等多字节字符。支持 URL 安全格式。全部在浏览器本地完成。" data-en="Convert between text and Base64 with proper UTF-8 handling. URL-safe variant supported. All local.">文本与 Base64 互转，正确处理中文等多字节字符。支持 URL 安全格式。全部在浏览器本地完成。</div>
+  </div>
+
+  <div class="panel">
+    <div class="two">
+      <div>
+        <h3 data-zh="输入" data-en="Input">输入</h3>
+        <textarea id="in" spellcheck="false" data-ph-zh="输入文本或 Base64…" data-ph-en="Enter text or Base64…"></textarea>
+        <div class="btns">
+          <button class="btn primary" id="enc" data-zh="编码 →" data-en="Encode →">编码 →</button>
+          <button class="btn primary" id="dec" data-zh="← 解码" data-en="← Decode">← 解码</button>
+          <button class="btn ghost" id="clr" data-zh="清空" data-en="Clear">清空</button>
+        </div>
+        <div class="btns">
+          <label style="font-size:12.5px;color:#6b7280;display:flex;align-items:center;gap:6px;cursor:pointer">
+            <input type="checkbox" id="urlsafe" style="width:auto;cursor:pointer">
+            <span data-zh="URL 安全（-_ 代替 +/）" data-en="URL-safe (-_ instead of +/)">URL 安全（-_ 代替 +/）</span>
+          </label>
+        </div>
+      </div>
+      <div>
+        <h3 data-zh="结果" data-en="Output">结果</h3>
+        <div class="out" id="out"></div>
+        <div class="btns">
+          <button class="btn ghost" id="cp" data-zh="复制结果" data-en="Copy result">复制结果</button>
+          <button class="btn ghost" id="swap" data-zh="结果送回输入" data-en="Send to input">结果送回输入</button>
+        </div>
+      </div>
+    </div>
+    <div class="hint" id="msg"></div>
+  </div>
+
+  <div class="ft"><a href="index.html">www.ilong.dpdns.org</a></div>
+</div>
+
+<script src="tools.js"></script>
+<script>
+(function(){
+  var $ = function(id){ return document.getElementById(id); };
+  var T = window.IlongTools;
+  var last = "";
+
+  // UTF-8 安全的编码 / 解码
+  function b64encode(str){
+    var bytes = new TextEncoder().encode(str);
+    var bin = "";
+    for (var i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+    return btoa(bin);
+  }
+  function b64decode(b64){
+    var clean = b64.replace(/\s/g, "").replace(/-/g, "+").replace(/_/g, "/");
+    while (clean.length % 4) clean += "=";
+    var bin = atob(clean);
+    var bytes = new Uint8Array(bin.length);
+    for (var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    return new TextDecoder("utf-8", {fatal: true}).decode(bytes);
+  }
+
+  function toUrlSafe(s){ return s.replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, ""); }
+
+  function setOut(s, isErr){
+    var o = $("out");
+    if (isErr){
+      o.innerHTML = '<span class="err">' + String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;") + '</span>';
+      last = "";
+    } else {
+      o.textContent = s;
+      last = s;
+    }
+  }
+
+  function msg(s, cls){
+    $("msg").innerHTML = '<span class="' + (cls || "ok") + '">' + s + '</span>';
+  }
+
+  function enc(){
+    var v = $("in").value;
+    if (!v){ setOut(""); $("msg").textContent = ""; return; }
+    var r;
+    try { r = b64encode(v); }
+    catch(e){ setOut("编码失败：" + e.message, true); return; }
+    if ($("urlsafe").checked) r = toUrlSafe(r);
+    setOut(r);
+    msg("✓ " + (T.lang()==="zh" ? ("已编码，" + v.length + " 字符 → " + r.length + " 字符") : ("Encoded — " + v.length + " chars → " + r.length + " chars")));
+  }
+
+  function dec(){
+    var v = $("in").value.trim();
+    if (!v){ setOut(""); $("msg").textContent = ""; return; }
+    var r;
+    try { r = b64decode(v); }
+    catch(e){
+      setOut(T.lang()==="zh" ? "解码失败：不是合法的 Base64，或解码后不是有效的 UTF-8 文本" :
+                               "Decode failed: not valid Base64, or result is not valid UTF-8", true);
+      return;
+    }
+    setOut(r);
+    msg("✓ " + (T.lang()==="zh" ? ("已解码，" + r.length + " 字符") : ("Decoded — " + r.length + " chars")));
+  }
+
+  $("enc").addEventListener("click", enc);
+  $("dec").addEventListener("click", dec);
+  $("clr").addEventListener("click", function(){ $("in").value = ""; setOut(""); $("msg").textContent = ""; });
+  $("cp").addEventListener("click", function(){
+    if (!last){ msg(T.lang()==="zh"?"没有可复制的内容":"Nothing to copy", "err"); return; }
+    T.copy(last, this);
+  });
+  $("swap").addEventListener("click", function(){
+    if (!last) return;
+    $("in").value = last; setOut(""); $("msg").textContent = "";
+    $("in").focus();
+  });
+
+  window.onLangChange = function(){ $("msg").textContent = ""; };
+})();
+</script>
+</body></html>

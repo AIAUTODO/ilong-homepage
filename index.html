@@ -2,6 +2,7 @@
 <html lang="zh-CN"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>iLONG</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%3E%3Ctext%20y%3D%22.9em%22%20font-size%3D%2290%22%3E%F0%9F%8D%89%3C%2Ftext%3E%3C%2Fsvg%3E">
 <meta name="robots" content="noindex,nofollow">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
@@ -72,7 +73,7 @@ body{font-family:-apple-system,"Segoe UI","Microsoft YaHei",sans-serif;backgroun
       <button type="button" data-lang="zh">中文</button>
     </div>
     <h1>iLONG</h1>
-    <div class="desc" data-zh="常用页面 一处直达" data-en="All in one place">常用页面 一处直达</div>
+    <div class="desc" data-zh="Pauca sed matura 🍉" data-en="Pauca sed matura 🍉">Pauca sed matura 🍉</div>
     <div class="clk">
       <span><i class="dot"></i><span data-zh="站点运行中" data-en="Online">站点运行中</span></span>
       <span><span data-zh="北京" data-en="Beijing">北京</span> <b id="c-cn">—</b></span>
@@ -107,26 +108,62 @@ body{font-family:-apple-system,"Segoe UI","Microsoft YaHei",sans-serif;backgroun
 
   </div>
 
-  <div class="sect"><h2 data-zh="工具" data-en="Tools">工具</h2><span class="n" data-zh="纯前端" data-en="Client-side">纯前端</span></div>
+  <div class="sect"><h2 data-zh="工具" data-en="Tools">工具</h2><span class="n" data-zh="纯前端 本地运行" data-en="Client-side, runs locally">纯前端 本地运行</span></div>
   <div class="grid">
 
-    <div class="card soon">
-      <div class="ico">🧰</div>
-      <div class="tt"><span data-zh="小工具集" data-en="Utilities">小工具集</span><span class="tag soon" data-zh="规划中" data-en="Planned">规划中</span></div>
-      <div class="ds" data-zh="JSON 格式化、Base64、时间戳转换、URL 编解码、二维码等。" data-en="JSON formatter, Base64, timestamp converter, URL codec, QR codes and more.">JSON 格式化、Base64、时间戳转换、URL 编解码、二维码等。</div>
-    </div>
+    <a class="card" href="tool-json.html">
+      <div class="ico">🧾</div>
+      <div class="tt"><span data-zh="JSON 格式化" data-en="JSON Formatter">JSON 格式化</span><span class="tag live" data-zh="可用" data-en="Live">可用</span></div>
+      <div class="ds" data-zh="展开缩进、语法着色、压缩、键名排序、校验。Ctrl+Enter 快速格式化。" data-en="Pretty-print, colorize, minify, sort keys and validate. Ctrl+Enter to format.">展开缩进、语法着色、压缩、键名排序、校验。Ctrl+Enter 快速格式化。</div>
+    </a>
 
-    <div class="card soon">
-      <div class="ico">🧮</div>
-      <div class="tt"><span data-zh="计算器" data-en="Calculators">计算器</span><span class="tag soon" data-zh="规划中" data-en="Planned">规划中</span></div>
-      <div class="ds" data-zh="单位换算、汇率换算、日期计算。" data-en="Unit conversion, currency conversion and date math.">单位换算、汇率换算、日期计算。</div>
-    </div>
+    <a class="card" href="tool-base64.html">
+      <div class="ico">🔤</div>
+      <div class="tt"><span data-zh="Base64 编解码" data-en="Base64">Base64 编解码</span><span class="tag live" data-zh="可用" data-en="Live">可用</span></div>
+      <div class="ds" data-zh="文本与 Base64 互转，正确支持中文，可选 URL 安全格式。" data-en="Convert text to and from Base64 with full Chinese support and URL-safe option.">文本与 Base64 互转，正确支持中文，可选 URL 安全格式。</div>
+    </a>
 
-    <div class="card soon">
-      <div class="ico">📊</div>
-      <div class="tt"><span data-zh="数据看板" data-en="Dashboards">数据看板</span><span class="tag soon" data-zh="规划中" data-en="Planned">规划中</span></div>
-      <div class="ds" data-zh="自定义监控指标与曲线。" data-en="Custom monitored metrics and charts.">自定义监控指标与曲线。</div>
-    </div>
+    <a class="card" href="tool-qr.html">
+      <div class="ico">📱</div>
+      <div class="tt"><span data-zh="二维码生成" data-en="QR Code">二维码生成</span><span class="tag live" data-zh="可用" data-en="Live">可用</span></div>
+      <div class="ds" data-zh="网址或任意文字生成二维码，可调尺寸与纠错级别，下载 PNG。" data-en="Generate QR codes from any text, adjustable size and error correction, PNG download.">网址或任意文字生成二维码，可调尺寸与纠错级别，下载 PNG。</div>
+    </a>
+
+    <a class="card" href="tool-color.html">
+      <div class="ico">🎨</div>
+      <div class="tt"><span data-zh="颜色取色转换" data-en="Color Converter">颜色取色转换</span><span class="tag live" data-zh="可用" data-en="Live">可用</span></div>
+      <div class="ds" data-zh="HEX / RGB / HSL 互转，实时预览与对比度检查，一键复制。" data-en="Convert between HEX, RGB and HSL with live preview and contrast check.">HEX / RGB / HSL 互转，实时预览与对比度检查，一键复制。</div>
+    </a>
+
+    <a class="card" href="tool-markdown.html">
+      <div class="ico">📝</div>
+      <div class="tt"><span data-zh="Markdown 预览" data-en="Markdown Preview">Markdown 预览</span><span class="tag live" data-zh="可用" data-en="Live">可用</span></div>
+      <div class="ds" data-zh="左侧编辑、右侧实时渲染，支持表格与代码块，可导出 HTML。" data-en="Edit on the left, render live on the right. Tables, code blocks, HTML export.">左侧编辑、右侧实时渲染，支持表格与代码块，可导出 HTML。</div>
+    </a>
+
+    <a class="card" href="tool-count.html">
+      <div class="ico">🔢</div>
+      <div class="tt"><span data-zh="字数统计" data-en="Word Count">字数统计</span><span class="tag live" data-zh="可用" data-en="Live">可用</span></div>
+      <div class="ds" data-zh="字符、汉字、词数、行数、段落、句子与阅读时长，中英文分别计算。" data-en="Characters, CJK, words, lines, paragraphs, sentences and read time.">字符、汉字、词数、行数、段落、句子与阅读时长，中英文分别计算。</div>
+    </a>
+
+    <a class="card" href="tool-password.html">
+      <div class="ico">🔑</div>
+      <div class="tt"><span data-zh="随机密码生成" data-en="Password Generator">随机密码生成</span><span class="tag live" data-zh="可用" data-en="Live">可用</span></div>
+      <div class="ds" data-zh="加密随机源生成强密码，显示熵值强度，可批量生成并排除易混字符。" data-en="Strong passwords from a cryptographic RNG, entropy strength, batch mode, exclude ambiguous.">加密随机源生成强密码，显示熵值强度，可批量生成并排除易混字符。</div>
+    </a>
+
+    <a class="card" href="tool-ip.html">
+      <div class="ico">🌐</div>
+      <div class="tt"><span data-zh="IP 信息" data-en="IP Information">IP 信息</span><span class="tag live" data-zh="可用" data-en="Live">可用</span></div>
+      <div class="ds" data-zh="查看公网 IP、归属地、网络运营商、ASN 与时区，三个数据源自动切换。" data-en="Public IP, location, ISP, ASN and timezone, with three sources as fallback.">查看公网 IP、归属地、网络运营商、ASN 与时区，三个数据源自动切换。</div>
+    </a>
+
+    <a class="card" href="tool-unit.html">
+      <div class="ico">📐</div>
+      <div class="tt"><span data-zh="换算" data-en="Convert">换算</span><span class="tag live" data-zh="可用" data-en="Live">可用</span></div>
+      <div class="ds" data-zh="长度、重量、温度、面积、体积、身高、数据与 BMI 换算，输入即算。" data-en="Length, weight, temperature, area, volume, height, data and BMI, with instant results.">长度、重量、温度、面积、体积、身高、数据与 BMI 换算，输入即算。</div>
+    </a>
 
   </div>
 

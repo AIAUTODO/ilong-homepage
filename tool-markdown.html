@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="zh-CN"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Markdown Preview · iLONG</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%3E%3Ctext%20y%3D%22.9em%22%20font-size%3D%2290%22%3E%F0%9F%8D%89%3C%2Ftext%3E%3C%2Fsvg%3E">
+<meta name="robots" content="noindex,nofollow">
+<link rel="stylesheet" href="tools.css">
+</head><body>
+<div class="wrap">
+
+  <div class="hd">
+    <div class="lang">
+      <button type="button" data-lang="en" class="on">EN</button>
+      <button type="button" data-lang="zh">中文</button>
+    </div>
+    <a class="back" href="index.html">← <span data-zh="返回首页" data-en="Back to home">返回首页</span></a>
+    <h1 data-zh="Markdown 实时预览" data-en="Markdown Live Preview">Markdown 实时预览</h1>
+    <div class="desc" data-zh="左边写 Markdown，右边即时渲染。支持标题、列表、表格、代码块、引用、链接。可导出 HTML。" data-en="Write Markdown on the left, see it rendered instantly. Headings, lists, tables, code blocks, quotes, links. Export to HTML.">左边写 Markdown，右边即时渲染。支持标题、列表、表格、代码块、引用、链接。可导出 HTML。</div>
+  </div>
+
+  <div class="panel">
+    <div class="two">
+      <div>
+        <h3 data-zh="Markdown" data-en="Markdown">Markdown</h3>
+        <textarea id="in" spellcheck="false" style="min-height:380px" data-ph-zh="在此输入 Markdown…" data-ph-en="Type Markdown here…"></textarea>
+      </div>
+      <div>
+        <h3 data-zh="预览" data-en="Preview">预览</h3>
+        <div class="md" id="out" style="min-height:380px"></div>
+      </div>
+    </div>
+    <div class="btns">
+      <button class="btn ghost" id="sample" data-zh="载入示例" data-en="Load sample">载入示例</button>
+      <button class="btn ghost" id="dlhtml" data-zh="导出 HTML" data-en="Export HTML">导出 HTML</button>
+      <button class="btn ghost" id="clr" data-zh="清空" data-en="Clear">清空</button>
+    </div>
+    <div class="hint" id="msg"></div>
+  </div>
+
+  <div class="ft"><a href="index.html">www.ilong.dpdns.org</a></div>
+</div>
+
+<script src="tools.js"></script>
+<script>
+(function(){
+  var $ = function(id){ return document.getElementById(id); };
+  var T = window.IlongTools;
+
+  function esc(s){
+    return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+  }
+
+  // 行内：代码 → 粗体 → 斜体 → 链接
+  function inline(s){
+    var codes = [];
+    s = s.replace(/`([^`]+)`/g, function(_, c){
+      codes.push(c);
+      return "\u0000C" + (codes.length - 1) + "\u0000";
+    });
+    s = esc(s);
+    s = s.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+    s = s.replace(/(^|[^*])\*([^*]+)\*/g, "$1<em>$2</em>");
+    s = s.replace(/\[([^\]]+)\]\(([^)]+)\)/g, function(_, text, href){
+      var safe = /^(https?:|mailto:|#|\/|\.)/i.test(href) ? href : "#";
+      return '<a href="' + safe.replace(/"/g,"&quot;") + '" target="_blank" rel="noopener">' + text + '</a>';
+    });
+    s = s.replace(/\u0000C(\d+)\u0000/g, function(_, i){ return "<code>" + esc(codes[+i]) + "</code>"; });
+    return s;
+  }
+
+  function render(md){
+    var lines = md.replace(/\r\n/g, "\n").split("\n");
+    var html = [];
+    var i = 0;
+
+    function isTableSep(s){ return /^\s*\|?[\s:|-]+\|[\s:|-]*$/.test(s) && s.indexOf("-") >= 0; }
+
+    while (i < lines.length){
+      var line = lines[i];
+
+      // 代码块
+      if (/^```/.test(line)){
+        var buf = [];
+        i++;
+        while (i < lines.length && !/^```/.test(lines[i])){ buf.push(lines[i]); i++; }
+        i++;
+        html.push("<pre><code>" + esc(buf.join("\n")) + "</code></pre>");
+        continue;
+      }
+
+      // 空行
+      if (!line.trim()){ i++; continue; }
+
+      // 水平线
+      if (/^\s*(\*{3,}|-{3,}|_{3,})\s*$/.test(line)){ html.push("<hr>"); i++; continue; }
+
+      // 标题
+      var m = line.match(/^(#{1,6})\s+(.*)$/);
+      if (m){
+        var lv = m[1].length;
+        html.push("<h" + lv + ">" + inline(m[2]) + "</h" + lv + ">");
+        i++;
+        continue;
+      }
+
+      // 表格
+      if (line.indexOf("|") >= 0 && i + 1 < lines.length && isTableSep(lines[i+1])){
+        var heads = line.replace(/^\s*\|/, "").replace(/\|\s*$/, "").split("|");
+        i += 2;
+        var rows = [];
+        while (i < lines.length && lines[i].indexOf("|") >= 0 && lines[i].trim()){
+          rows.push(lines[i].replace(/^\s*\|/, "").replace(/\|\s*$/, "").split("|"));
+          i++;
+        }
+        var th = "<tr>" + heads.map(function(h){ return "<th>" + inline(h.trim()) + "</th>"; }).join("") + "</tr>";
+        var tb = rows.map(function(r){
+          return "<tr>" + r.map(function(c){ return "<td>" + inline(c.trim()) + "</td>"; }).join("") + "</tr>";
+        }).join("");
+        html.push("<table>" + th + tb + "</table>");
+        continue;
+      }
+
+      // 引用
+      if (/^\s*>/.test(line)){
+        var q = [];
+        while (i < lines.length && /^\s*>/.test(lines[i])){
+          q.push(lines[i].replace(/^\s*>\s?/, ""));
+          i++;
+        }
+        html.push("<blockquote>" + inline(q.join(" ")) + "</blockquote>");
+        continue;
+      }
+
+      // 无序列表
+      if (/^\s*[-*+]\s+/.test(line)){
+        var ul = [];
+        while (i < lines.length && /^\s*[-*+]\s+/.test(lines[i])){
+          ul.push("<li>" + inline(lines[i].replace(/^\s*[-*+]\s+/, "")) + "</li>");
+          i++;
+        }
+        html.push("<ul>" + ul.join("") + "</ul>");
+        continue;
+      }
+
+      // 有序列表
+      if (/^\s*\d+\.\s+/.test(line)){
+        var ol = [];
+        while (i < lines.length && /^\s*\d+\.\s+/.test(lines[i])){
+          ol.push("<li>" + inline(lines[i].replace(/^\s*\d+\.\s+/, "")) + "</li>");
+          i++;
+        }
+        html.push("<ol>" + ol.join("") + "</ol>");
+        continue;
+      }
+
+      // 普通段落
+      var p = [];
+      while (i < lines.length && lines[i].trim() &&
+             !/^(#{1,6}\s|```|\s*>|\s*[-*+]\s|\s*\d+\.\s)/.test(lines[i])){
+        p.push(inline(lines[i]));
+        i++;
+        if (i < lines.length && /^\s*(\*{3,}|-{3,}|_{3,})\s*$/.test(lines[i])) break;
+      }
+      if (p.length) html.push("<p>" + p.join("<br>") + "</p>");
+    }
+    return html.join("\n");
+  }
+
+  function update(){
+    var md = $("in").value;
+    $("out").innerHTML = md.trim() ? render(md) : "";
+    var chars = md.length;
+    var words = md.trim() ? md.trim().split(/\s+/).length : 0;
+    $("msg").innerHTML = '<span class="ok">' + (T.lang()==="zh"
+      ? (chars + " 字符 · " + words + " 段词")
+      : (chars + " chars · " + words + " words")) + '</span>';
+  }
+
+  var SAMPLE_ZH = "# iLONG 工具集\n\n这是一个 **Markdown** 实时预览工具。\n\n## 支持的功能\n\n- 标题（H1-H6）\n- **粗体** 与 *斜体*\n- `行内代码`\n- 列表与引用\n- 表格\n\n### 代码块\n\n```\nprint(\"hello\")\n```\n\n### 表格示例\n\n| 工具 | 状态 |\n|---|---|\n| JSON 格式化 | 已完成 |\n| Base64 | 已完成 |\n\n> 所有处理都在浏览器本地完成，数据不会上传。\n\n---\n\n链接示例：[返回首页](index.html)\n";
+
+  var SAMPLE_EN = "# iLONG Tools\n\nThis is a **Markdown** live preview tool.\n\n## Features\n\n- Headings (H1-H6)\n- **Bold** and *italic*\n- `inline code`\n- Lists and quotes\n- Tables\n\n### Code block\n\n```\nprint(\"hello\")\n```\n\n### Table example\n\n| Tool | Status |\n|---|---|\n| JSON Formatter | Done |\n| Base64 | Done |\n\n> Everything runs locally in your browser. No data is uploaded.\n\n---\n\nLink example: [Back to home](index.html)\n";
+
+  $("in").addEventListener("input", update);
+  $("clr").addEventListener("click", function(){ $("in").value = ""; update(); });
+  $("sample").addEventListener("click", function(){
+    $("in").value = T.lang() === "zh" ? SAMPLE_ZH : SAMPLE_EN;
+    update();
+  });
+  $("dlhtml").addEventListener("click", function(){
+    var body = $("out").innerHTML;
+    var doc = '<!DOCTYPE html>\n<html><head><meta charset="utf-8"><title>Markdown Export</title>\n' +
+      '<style>body{font-family:-apple-system,"Segoe UI","Microsoft YaHei",sans-serif;max-width:760px;margin:40px auto;padding:0 20px;line-height:1.75;color:#1f2328}' +
+      'h1,h2{border-bottom:1px solid #eee;padding-bottom:.3em}' +
+      'code{background:#f2f3f5;padding:2px 6px;border-radius:4px;font-family:Consolas,monospace}' +
+      'pre{background:#f7f8fa;padding:14px;border-radius:8px;overflow:auto}pre code{background:none;padding:0}' +
+      'blockquote{border-left:3px solid #ddd;padding-left:14px;color:#666;margin-left:0}' +
+      'table{border-collapse:collapse}th,td{border:1px solid #ddd;padding:7px 12px}th{background:#fafafa}' +
+      '</style></head><body>\n' + body + '\n</body></html>';
+    T.download(doc, "markdown.html", "text/html;charset=utf-8");
+  });
+
+  window.onLangChange = function(){ update(); };
+
+  $("in").value = SAMPLE_EN;
+  update();
+})();
+</script>
+</body></html>
